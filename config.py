@@ -1,4 +1,27 @@
+# Local folder
+FOLDER_NAME = "news"
+
+# Drive folder
+SERVICE_ACCOUNT_FILE = "secrets/credentials.json"
+SHARED_FOLDER_ID = "ForexFactory"  # ForexFactory
+
 # Constants for allowed classes and patterns
+REQUEST_URL = "https://www.forexfactory.com/calendar"
+
+MONTH_NUM_TO_NAME = {
+    1: "jan",
+    2: "feb",
+    3: "mar",
+    4: "apr",
+    5: "may",
+    6: "jun",
+    7: "jul",
+    8: "aug",
+    9: "sep",
+    10: "oct",
+    11: "nov",
+    12: "dec"
+}
 
 ALLOWED_ELEMENT_TYPES = {
     "calendar__cell": "date",
@@ -16,14 +39,14 @@ EXCLUDED_ELEMENT_TYPES = [
 ]
 
 ICON_COLOR_MAP = {
-    "icon icon--ff-impact-yel": "yellow",
-    "icon icon--ff-impact-ora": "orange",
-    "icon icon--ff-impact-red": "red",
-    "icon icon--ff-impact-gra": "gray"
+    "icon icon--ff-impact-yel": "Low",
+    "icon icon--ff-impact-ora": "Medium",
+    "icon icon--ff-impact-red": "High",
+    "icon icon--ff-impact-gra": "Holiday"
 }
 
 # THE CURRENCY CODES I WANT TO SCRAPE
-ALLOWED_CURRENCY_CODES = ['CAD', 'EUR', 'GBP', 'USD']
+ALLOWED_CURRENCY_CODES = ['CAD', 'EUR', 'GBP', 'USD', 'NZD']
 
 # THE NEWS EVENTS WITH IMPACTS, THAT I WANT TO SCRAPE
-ALLOWED_IMPACT_COLORS = ['red', 'orange', 'gray']
+ALLOWED_IMPACT_COLORS = ['High', 'Holiday']
