@@ -11,6 +11,39 @@ from tzlocal import get_localzone
 from config import ALLOWED_IMPACT_COLORS, FOLDER_NAME
 
 
+def is_good_for_currency(row):
+    """
+        Chuyển dự đoán bình thường thành có tốt cho đồng tiền đó (currency) không
+        Args: row (Dict): Dictionary chứa dữ liệu từng hàng (row).
+        Returns: int: 1 (tốt cho đồng tiền), -1 (Không tốt cho đồng tiền), 0 (không tốt không xấu)
+    """
+    if row['criteria'] == 1:
+        if row['Diff'] > 0:
+            return 1
+        elif row['Diff'] < 0:
+            return -1
+        else:
+            return 0
+    elif row['criteria'] == -1:
+        if row['Diff'] < 0:
+            return 1
+        elif row['Diff'] > 0:
+            return -1
+        else:
+            return 0
+    else:
+        return 0
+
+
+def convert_to_float(value):
+    if pd.isna(value) or value == '':
+        return None
+    value = str(value).strip().replace('%', '').replace(
+        ',', '').replace('B', '').replace('K', '').replace('M', '').replace('<', '')
+
+    return round(float(value), 4)
+
+
 def construct_url(url: str, **params):
     url = '{}?{}'.format(url, urlencode(params))
 
@@ -19,9 +52,9 @@ def construct_url(url: str, **params):
 
 def read_json(path):
     """
-    Read JSON data from a file.
-    Args: path (str): The path to the JSON file.
-    Returns: dict: The loaded JSON data.
+        Read JSON data from a file.
+        Args: path (str): The path to the JSON file.
+        Returns: dict: The loaded JSON data.
     """
     with open(path, 'r') as f:
         data = json.load(f)
@@ -92,6 +125,32 @@ def find_pattern_category(text):
     return True, category, matched_text
 
 
+def convert_to_datetime(current_date, current_time, year):
+    """
+    Convert to datetime
+
+    Args:
+        data (list): The scraped data as a list of lists.
+        month (str): The month for naming the output CSV file.
+
+    Returns:
+        pd.DataFrame: The reformatted data as a DataFrame.
+    """
+    current_timezone = get_localzone()
+    convert_time_zone = pytz.UTC
+
+    if "Day" in current_time or "Tentative" in current_time:
+        current_time = "12:00am"
+        convert_time_zone = current_timezone
+
+    current_datetime = datetime.strptime(
+        f'{current_date} {year} {current_time}', '%b %d %Y %I:%M%p').astimezone(
+            current_timezone).astimezone(
+                convert_time_zone)
+
+    return current_datetime
+
+
 def reformat_scraped_data(data, month, year):
     """
     Reformat scraped data and save it as a DataFrame and a CSV file.
@@ -105,7 +164,6 @@ def reformat_scraped_data(data, month, year):
     """
     current_date = ''
     current_time = ''
-    current_timezone = get_localzone()
     structured_rows = []
 
     for row in data:
@@ -123,15 +181,8 @@ def reformat_scraped_data(data, month, year):
             if row[-2] not in ALLOWED_IMPACT_COLORS or current_date == "" or current_time == "":
                 continue
 
-            convert_time_zone = pytz.UTC
-            if "Day" in current_time or "Tentative" in current_time:
-                current_time = "12:00am"
-                convert_time_zone = current_timezone
-
-            current_datetime = datetime.strptime(
-                f'{current_date} {year} {current_time}', '%b %d %Y %I:%M%p').astimezone(
-                    current_timezone).astimezone(
-                        convert_time_zone)
+            current_datetime = convert_to_datetime(
+                current_date, year)
             current_datetime_str = current_datetime.strftime(
                 '%Y.%m.%d %H:%M:%S')
 
@@ -140,11 +191,13 @@ def reformat_scraped_data(data, month, year):
             currency = row[-3]
 
             structured_rows.append(
-                [current_datetime, current_datetime_str, currency, impact, event])
+                [current_datetime, current_datetime_str, currency, impact, event]
+            )
 
     file_name = f"{FOLDER_NAME}/{year}/{month}.csv"
     df = pd.DataFrame(
         structured_rows, columns=['temp_datetime', 'datetime', 'currency', 'impact', 'event'])
+    df = df.loc[df['currency'] != "All", :]
     df = df.sort_values(['datetime'])
     df = df.drop(columns=['temp_datetime'])
 

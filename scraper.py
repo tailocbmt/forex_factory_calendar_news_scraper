@@ -65,7 +65,7 @@ for selected_year in range(year, year - 3, -1):
 
         with driver as browser:
             browser.get(url)
-            browser.get_screenshot_as_file("debug.png")
+            # browser.get_screenshot_as_file("debug.png")
 
             commentr = WebDriverWait(browser, 20).until(
                 EC.visibility_of_element_located((By.CLASS_NAME, 'calendar__table')))
